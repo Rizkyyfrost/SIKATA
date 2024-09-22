@@ -11,15 +11,17 @@
             background-size: cover;
             min-height: 100vh;
             display: flex;
-            flex-direction: column; /* Agar konten fleksibel */
-            justify-content: space-between; /* Tempatkan konten utama dan footer secara terpisah */
+            flex-direction: column;
+            justify-content: center; /* Vertikal tengah */
+            align-items: center; /* Horizontal tengah */
         }
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-grow: 1; /* Agar konten memenuhi ruang di antara footer dan header */
+            flex-grow: 1; /* Agar konten mengisi ruang di antara footer dan header */
+            max-width: 100%; /* Pastikan elemen tidak melampaui layar */
         }
         .animate-fade-in {
             animation: fadeIn 1s ease-in-out forwards;
@@ -47,7 +49,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Judul dan konten utama -->
+        <!-- Konten utama kuis -->
         <div class="bg-white bg-opacity-90 backdrop-blur-lg p-10 rounded-xl shadow-2xl w-full max-w-lg animate-fade-in text-center">
             <h1 class="text-5xl font-extrabold text-purple-600 text-center mb-8 uppercase tracking-wider whitespace-nowrap">Tebak Kata</h1>
 
