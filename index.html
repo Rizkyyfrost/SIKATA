@@ -81,8 +81,13 @@
             { word: 'mobil', hint: 'Kendaraan beroda empat' },
             { word: '2030', hint: 'Roda tanpa ban dibuat masal pada tahun' },
             { word: 'buku', hint: 'Sumber ilmu yang bisa dibaca' },
-            { word: 'gitar', hint: 'Alat musik dengan dawai' }, 
-            { word: 'Jerman', hint: 'Negara yang kalah pada perang dunia ke 2' }
+            { word: 'sasando', hint: 'Alat musik yang diciptakan di Indonesia bagian timur' }, 
+            { word: 'Jerman', hint: 'Negara yang kalah pada perang dunia ke 2' },
+            { word: 'Bali', hint: 'Puputan margarana adalah perang habis habisan di' },
+            { word: 'Graham bell', hint: 'Perancang smartphone' },
+            { word: 'N65', hint: 'Node chipset tertua di dunia' },                                             
+            { word: 'Suriname', hint: 'Negara yang paling banyak orang jawanya selain Indonesia ' },
+            { word: 'smkn54', hint: 'Perancang web ini bangga kepada sekolah ' },
         ];
 
         let currentWord = {};
@@ -99,12 +104,12 @@
             result.classList.remove('opacity-0');
             
             if (userGuess === currentWord.word.toLowerCase()) { // Samakan dengan jawaban juga menjadi huruf kecil
-                result.innerText = "Selamat! Tebakan kamu benar 🎉";
+                result.innerText = "Selamat! Tebakanmu benar 🔥"; di 
                 result.style.color = "#10B981";
                 result.classList.add('animate-bounce');
                 setTimeout(setNewWord, 2000); // Menampilkan soal baru setelah 2 detik
             } else {
-                result.innerText = "Salah! Coba lagi 🙁";
+                result.innerText = "Salah! Coba lagi kawanku 😅";
                 result.style.color = "#EF4444";
                 result.classList.add('animate-shake');
             }
