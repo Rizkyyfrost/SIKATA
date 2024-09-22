@@ -57,15 +57,24 @@
             position: relative;
             background: rgba(0, 0, 0, 0.5);
         }
+        .play-button {
+            background-color: #4F46E5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+        .play-button:hover {
+            background-color: #6D28D9;
+        }
     </style>
 </head>
 <body>
-    <!-- Tambahkan elemen audio untuk backsound -->
-    <audio id="backsound" autoplay loop>
-        <source src="backsound.mp3" type="audio/mpeg">
-        Browser kamu tidak mendukung elemen audio.
-    </audio>
-
     <!-- Jam saat ini ditampilkan di pojok kiri atas -->
     <div class="clock" id="clock"></div>
 
@@ -89,6 +98,15 @@
             <p id="result" class="text-xl font-semibold text-center mt-6 transition-opacity opacity-0"></p>
         </div>
     </div>
+
+    <!-- Tombol Play Music -->
+    <button class="play-button" id="playButton" onclick="toggleAudio()">></button>
+
+    <!-- Elemen audio untuk backsound -->
+    <audio id="backsound" loop>
+        <source src="backsound.mp3" type="audio/mpeg">
+        Browser kamu tidak mendukung elemen audio.
+    </audio>
 
     <footer>
         <p>2024©RizkyMaulana&team</p>
@@ -168,6 +186,20 @@
                 checkGuess();
             }
         });
+
+        // Fungsi untuk memutar dan menghentikan musik
+        function toggleAudio() {
+            const audio = document.getElementById('backsound');
+            const playButton = document.getElementById('playButton');
+            
+            if (audio.paused) {
+                audio.play();
+                playButton.innerText = "||"; // Ganti ikon menjadi pause
+            } else {
+                audio.pause();
+                playButton.innerText = ">"; // Kembali ke ikon play
+            }
+        }
 
         // Atur soal pertama kali
         setNewWord();
