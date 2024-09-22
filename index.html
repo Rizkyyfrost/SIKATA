@@ -25,11 +25,11 @@
         }
         .clock {
             background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px 15px; /* Kurangi padding agar lebih kecil */
-            border-radius: 50px; /* Bentuk oval */
-            font-size: 1rem; /* Perkecil ukuran font */
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 1rem;
             font-weight: bold;
-            color: #4F46E5; /* Warna ungu */
+            color: #4F46E5;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: absolute;
             top: 20px;
@@ -60,6 +60,12 @@
     </style>
 </head>
 <body>
+    <!-- Tambahkan elemen audio untuk backsound -->
+    <audio id="backsound" autoplay loop>
+        <source src="backsound.mp3" type="audio/mpeg">
+        Browser kamu tidak mendukung elemen audio.
+    </audio>
+
     <!-- Jam saat ini ditampilkan di pojok kiri atas -->
     <div class="clock" id="clock"></div>
 
@@ -135,25 +141,25 @@
         }
 
         function checkGuess() {
-            const userGuess = document.getElementById('guessInput').value.trim().toLowerCase(); // Menghapus spasi dan menyamakan huruf
+            const userGuess = document.getElementById('guessInput').value.trim().toLowerCase();
             const result = document.getElementById('result');
             result.classList.remove('opacity-0');
             
-            if (userGuess === currentWord.word.toLowerCase()) { // Samakan dengan jawaban juga menjadi huruf kecil
+            if (userGuess === currentWord.word.toLowerCase()) {
                 result.innerText = "Selamat! Tebakanmu benar 🔥";
                 result.style.color = "#10B981";
                 result.classList.add('animate-bounce');
                 setTimeout(() => {
                     result.classList.remove('animate-bounce');
                     setNewWord(); 
-                }, 2000); // Menampilkan soal baru setelah 2 detik
+                }, 2000); 
             } else {
                 result.innerText = "Salah! Coba lagi kawanku 😅";
                 result.style.color = "#EF4444";
                 result.classList.add('animate-shake');
                 setTimeout(() => {
                     result.classList.remove('animate-shake');
-                }, 1000); // Hapus animasi setelah 1 detik
+                }, 1000);
             }
         }
 
