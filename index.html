@@ -102,6 +102,10 @@
             </button>
             
             <p id="result" class="text-xl font-semibold text-center mt-6 transition-opacity opacity-0"></p>
+            
+            <!-- Menampilkan nilai dan rerata -->
+            <p id="score" class="text-lg font-medium text-center mt-4">Nilai: 0</p>
+            <p id="average" class="text-lg font-medium text-center mt-2">Rerata: 0</p>
         </div>
     </div>
 
@@ -148,10 +152,15 @@
 
         let currentWord = {};
         let usedWords = [];
+        let score = 0;
+        let correctAnswers = 0;
+        let totalTests = 0;
+        let totalScore = 0;
 
         function setNewWord() {
             if (usedWords.length === words.length) {
                 usedWords = []; // Reset jika semua soal telah ditampilkan
+                updateAverageScore(); // Tampilkan rerata di akhir setiap set
             }
 
             do {
@@ -173,6 +182,9 @@
                 result.innerText = "Selamat! Tebakanmu benar 🔥";
                 result.style.color = "#10B981";
                 result.classList.add('animate-bounce');
+                correctAnswers++;
+                score = (correctAnswers / words.length) * 100;
+                document.getElementById('score').innerText = `Nilai: ${Math.round(score)}`;
                 setTimeout(() => {
                     result.classList.remove('animate-bounce');
                     setNewWord(); 
@@ -185,6 +197,21 @@
                     result.classList.remove('animate-shake');
                 }, 1000);
             }
+
+            // Setelah semua soal selesai, hitung rerata
+            if (usedWords.length === words.length) {
+                totalTests++;
+                totalScore += score;
+                updateAverageScore(); // Tampilkan rerata
+                // Reset skor dan jawaban benar untuk test baru
+                correctAnswers = 0;
+                score = 0;
+            }
+        }
+
+        function updateAverageScore() {
+            const averageScore = totalScore / totalTests;
+            document.getElementById('average').innerText = `Rerata: ${Math.round(averageScore)}`;
         }
 
         document.getElementById('guessInput').addEventListener('keyup', function (e) {
