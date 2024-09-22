@@ -12,16 +12,28 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Vertikal tengah */
-            align-items: center; /* Horizontal tengah */
+            justify-content: center;
+            align-items: center;
         }
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-grow: 1; /* Agar konten mengisi ruang di antara footer dan header */
-            max-width: 100%; /* Pastikan elemen tidak melampaui layar */
+            flex-grow: 1;
+            max-width: 100%;
+        }
+        .clock {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 15px; /* Kurangi padding agar lebih kecil */
+            border-radius: 50px; /* Bentuk oval */
+            font-size: 1rem; /* Perkecil ukuran font */
+            font-weight: bold;
+            color: #4F46E5; /* Warna ungu */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 20px;
+            left: 20px;
         }
         .animate-fade-in {
             animation: fadeIn 1s ease-in-out forwards;
@@ -43,13 +55,15 @@
             width: 100%;
             padding: 10px;
             position: relative;
-            background: rgba(0, 0, 0, 0.5); /* Tambahkan sedikit transparansi */
+            background: rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
+    <!-- Jam saat ini ditampilkan di pojok kiri atas -->
+    <div class="clock" id="clock"></div>
+
     <div class="container">
-        <!-- Konten utama kuis -->
         <div class="bg-white bg-opacity-90 backdrop-blur-lg p-10 rounded-xl shadow-2xl w-full max-w-lg animate-fade-in text-center">
             <h1 class="text-5xl font-extrabold text-purple-600 text-center mb-8 uppercase tracking-wider whitespace-nowrap">Tebak Kata</h1>
 
@@ -70,12 +84,24 @@
         </div>
     </div>
 
-    <!-- Footer tetap di bawah -->
     <footer>
         <p>2024©RizkyMaulana&team</p>
     </footer>
 
     <script>
+        // Fungsi untuk menampilkan waktu sekarang
+        function updateClock() {
+            const clockElement = document.getElementById('clock');
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            clockElement.innerText = `Jam sekarang (${hours}:${minutes})`;
+        }
+
+        // Update setiap detik
+        setInterval(updateClock, 1000);
+        updateClock(); // Panggil sekali untuk inisialisasi waktu
+
         const words = [
             { word: 'Kapal', hint: 'Kendaraan melayang sejauh min 1 kaki' },
             { word: 'mobil', hint: 'Kendaraan beroda empat' },
@@ -91,8 +117,18 @@
         ];
 
         let currentWord = {};
+        let usedWords = [];
+
         function setNewWord() {
-            currentWord = words[Math.floor(Math.random() * words.length)];
+            if (usedWords.length === words.length) {
+                usedWords = []; // Reset jika semua soal telah ditampilkan
+            }
+
+            do {
+                currentWord = words[Math.floor(Math.random() * words.length)];
+            } while (usedWords.includes(currentWord.word)); // Memastikan soal tidak diulang
+
+            usedWords.push(currentWord.word);
             document.getElementById('hint').innerText = `Petunjuk: ${currentWord.hint}`;
             document.getElementById('guessInput').value = '';
             document.getElementById('result').classList.add('opacity-0');
@@ -104,14 +140,20 @@
             result.classList.remove('opacity-0');
             
             if (userGuess === currentWord.word.toLowerCase()) { // Samakan dengan jawaban juga menjadi huruf kecil
-                result.innerText = "Selamat! Tebakanmu benar 🔥"; di 
+                result.innerText = "Selamat! Tebakanmu benar 🔥";
                 result.style.color = "#10B981";
                 result.classList.add('animate-bounce');
-                setTimeout(setNewWord, 2000); // Menampilkan soal baru setelah 2 detik
+                setTimeout(() => {
+                    result.classList.remove('animate-bounce');
+                    setNewWord(); 
+                }, 2000); // Menampilkan soal baru setelah 2 detik
             } else {
                 result.innerText = "Salah! Coba lagi kawanku 😅";
                 result.style.color = "#EF4444";
                 result.classList.add('animate-shake');
+                setTimeout(() => {
+                    result.classList.remove('animate-shake');
+                }, 1000); // Hapus animasi setelah 1 detik
             }
         }
 
