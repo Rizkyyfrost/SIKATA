@@ -1,245 +1,595 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Tebak Kata</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #4F46E5;
+            --secondary: #8B5CF6;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --light: #F9FAFB;
+        }
+
         body {
-            background: url('back.png') no-repeat center center fixed;
-            background-size: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 0.3s;
         }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: var(--light);
+        }
+
         .container {
-            display: flex;
-            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .card {
+            background: rgba(30, 30, 40, 0.9);
+            color: var(--light);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex-grow: 1;
-            max-width: 100%;
+            gap: 8px;
         }
-        .clock {
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px 15px;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: #4F46E5;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-        .animate-fade-in {
-            animation: fadeIn 1s ease-in-out forwards;
-            opacity: 0;
-        }
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-        .input-glow {
-            transition: box-shadow 0.3s ease;
-        }
-        .input-glow:focus {
-            box-shadow: 0 0 10px #a78bfa, 0 0 40px #c084fc;
-        }
-        footer {
-            text-align: center;
+
+        .btn-primary {
+            background: var(--primary);
             color: white;
-            font-size: 0.875rem;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 10px;
-            position: relative;
-            background: rgba(0, 0, 0, 0.5);
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
-        .play-button {
-            background-color: #4F46E5;
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .dark-mode .modal-content {
+            background: #374151;
+            color: var(--light);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: var(--success);
             color: white;
-            width: 50px;
-            height: 50px;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-info {
+            background: var(--primary);
+            color: white;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #E5E7EB;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .dark-mode .progress-bar {
+            background: #4B5563;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dark-mode .timer {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #E5E7EB;
+            align-items: center;
+        }
+
+        .dark-mode .leaderboard-item {
+            border-bottom: 1px solid #4B5563;
+        }
+
+        .question-option {
+            padding: 15px;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark-mode .question-option {
+            border: 2px solid #4B5563;
+        }
+
+        .question-option:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .question-option.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.2);
+        }
+
+        .question-option.correct {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .question-option.incorrect {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .floating-btn {
+            position: fixed;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
             font-size: 1.5rem;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: absolute;
-            bottom: 50px;
-            left: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 90;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
         }
-        .play-button:hover {
-            background-color: #6D28D9;
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-toggle {
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+        }
+
+        .music-toggle {
+            bottom: 90px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+        }
+
+        .admin-toggle {
+            bottom: 160px;
+            right: 20px;
+            background: var(--warning);
+            color: white;
+        }
+
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #E5E7EB;
+            margin-bottom: 20px;
+        }
+
+        .dark-mode .tab-container {
+            border-bottom: 1px solid #4B5563;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .floating-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .music-toggle {
+                bottom: 80px;
+            }
+            
+            .admin-toggle {
+                bottom: 140px;
+            }
+        }
+
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
-    <!-- Jam saat ini ditampilkan di pojok kiri atas -->
-    <div class="clock" id="clock"></div>
-
-    <div class="container">
-        <div class="bg-white bg-opacity-90 backdrop-blur-lg p-10 rounded-xl shadow-2xl w-full max-w-lg animate-fade-in text-center">
-            <h1 class="text-5xl font-extrabold text-purple-600 text-center mb-8 uppercase tracking-wider whitespace-nowrap">Tebak Kata</h1>
-
-            <div class="flex flex-col items-center mb-6 text-lg text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3" />
-                </svg>
-                <p id="hint" class="mt-3 font-medium text-center"></p>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-5">
+        <div class="card w-full max-w-md text-center fade-in">
+            <h1 class="text-4xl font-bold text-purple-600 mb-2">Tebak Kata</h1>
+            <p class="text-gray-600 mb-6">Selamat datang! Silakan masuk untuk mulai bermain</p>
+            
+            <div class="mb-4">
+                <input type="text" id="usernameInput" placeholder="Masukkan nama pengguna" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
             </div>
             
-            <input type="text" id="guessInput" placeholder="Masukkan tebakan..." class="w-full p-4 mb-4 text-lg border-2 border-gray-300 rounded-full focus:outline-none focus:border-purple-500 input-glow">
-            
-            <button onclick="checkGuess()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 px-6 rounded-full font-bold tracking-wider hover:scale-105 transition-transform">
-                Cek Tebakan
+            <button id="loginBtn" class="btn btn-primary w-full mb-4">
+                <i class="fas fa-sign-in-alt"></i> Masuk
             </button>
             
-            <p id="result" class="text-xl font-semibold text-center mt-6 transition-opacity opacity-0"></p>
+            <button id="guestLoginBtn" class="btn btn-secondary w-full">
+                <i class="fas fa-user"></i> Masuk sebagai Tamu
+            </button>
             
-            <!-- Menampilkan nilai dan rerata -->
-            <p id="score" class="text-lg font-medium text-center mt-4">Nilai: 0</p>
-            <p id="average" class="text-lg font-medium text-center mt-2">Rerata: 0</p>
+            <div class="mt-6 text-sm text-gray-500">
+                <p>Progress permainan akan disimpan secara lokal di perangkat Anda</p>
+            </div>
         </div>
     </div>
 
-    <!-- Tombol Play Music berbentuk bulat -->
-    <button class="play-button" id="playButton" onclick="toggleAudio()">></button>
+    <!-- Main Game Screen -->
+    <div id="gameScreen" class="min-h-screen hidden">
+        <div class="container">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold">Tebak Kata</h1>
+                    <p id="userGreeting" class="text-gray-600 dark:text-gray-300">Halo, <span id="currentUser"></span>!</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="attendanceStatus" class="badge badge-info">
+                        <i class="fas fa-calendar-check"></i> <span id="attendanceText">Absen Hari Ini</span>
+                    </div>
+                    <button id="logoutBtn" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Keluar
+                    </button>
+                </div>
+            </div>
 
-    <!-- Elemen audio untuk backsound -->
-    <audio id="backsound" loop>
-        <source src="backsound.mp3" type="audio/mpeg">
-        Browser kamu tidak mendukung elemen audio.
+            <!-- Mode Selection -->
+            <div class="card text-center mb-6">
+                <h2 class="text-xl font-bold mb-4">Pilih Mode Permainan</h2>
+                <div class="flex gap-4 justify-center">
+                    <button id="practiceModeBtn" class="btn btn-primary flex-1">
+                        <i class="fas fa-graduation-cap"></i> Mode Latihan
+                    </button>
+                    <button id="examModeBtn" class="btn btn-secondary flex-1">
+                        <i class="fas fa-clock"></i> Mode Ujian
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Area -->
+            <div id="gameArea" class="hidden">
+                <!-- Timer (for exam mode) -->
+                <div id="timerContainer" class="card text-center mb-4 hidden">
+                    <div class="timer">
+                        <i class="fas fa-clock"></i> <span id="timer">10:00</span>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="card mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span>Progress</span>
+                        <span id="progressText">Soal 1 dari 10</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 10%"></div>
+                    </div>
+                </div>
+
+                <!-- Question -->
+                <div class="card mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold">Soal</h2>
+                        <span id="scoreDisplay" class="badge badge-success">Skor: 0</span>
+                    </div>
+                    
+                    <p id="questionHint" class="text-lg mb-6"></p>
+                    
+                    <!-- Multiple Choice Options -->
+                    <div id="optionsContainer" class="space-y-3">
+                        <!-- Options will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- Text Input (for fill-in questions) -->
+                    <div id="textInputContainer" class="hidden">
+                        <input type="text" id="textAnswerInput" placeholder="Ketik jawaban Anda..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <button id="submitTextAnswerBtn" class="btn btn-primary w-full mt-3">
+                            <i class="fas fa-check"></i> Submit Jawaban
+                        </button>
+                    </div>
+                    
+                    <!-- Feedback -->
+                    <div id="feedbackContainer" class="mt-4 hidden">
+                        <p id="feedbackText" class="text-lg font-semibold"></p>
+                        <button id="nextQuestionBtn" class="btn btn-primary w-full mt-3">
+                            <i class="fas fa-arrow-right"></i> Soal Berikutnya
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">Pencapaian</h2>
+                    <div id="achievementsContainer" class="flex flex-wrap justify-center">
+                        <!-- Achievements will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div id="leaderboardContainer" class="card hidden">
+                <h2 class="text-xl font-bold mb-4">Peringkat Pemain</h2>
+                <div id="leaderboardList">
+                    <!-- Leaderboard items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Buttons -->
+    <button class="floating-btn theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <button class="floating-btn music-toggle" id="musicToggle">
+        <i class="fas fa-music"></i>
+    </button>
+    
+    <button class="floating-btn admin-toggle" id="adminToggle">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- Audio Element -->
+    <audio id="backgroundMusic" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
     </audio>
 
-    <footer>
-        <p>2024©RizkyMaulana&team</p>
-    </footer>
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Panel Administrator</h2>
+                    <button id="closeAdminModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="adminLoginForm">
+                    <p class="mb-4">Masukkan kode administrator:</p>
+                    <input type="password" id="adminCodeInput" placeholder="Kode admin" class="w-full p-3 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <button id="adminLoginBtn" class="btn btn-primary w-full">
+                        <i class="fas fa-sign-in-alt"></i> Masuk sebagai Admin
+                    </button>
+                </div>
+                
+                <div id="adminPanel" class="hidden">
+                    <div class="tab-container">
+                        <div class="tab active" data-tab="dashboard">Dashboard</div>
+                        <div class="tab" data-tab="questions">Bank Soal</div>
+                        <div class="tab" data-tab="reports">Laporan</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="dashboardTab">
+                        <h3 class="text-lg font-bold mb-4">Statistik Keseluruhan</h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="card text-center">
+                                <p class="text-3xl font-bold" id="totalPlayers">0</p>
+                                <p class="text-gray-600 dark:text-gray-300">Total Pemain</p>
+                            </div>
+                            <div class="card text-center">
+                                <p class="text-3xl font-bold" id="averageScore">0</p>
+                                <p class="text-gray-600 dark:text-gray-300">Rata-rata Skor</p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-bold mb-4">Pemain Terbaru</h3>
+                        <div id="recentPlayers">
+                            <!-- Recent players will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="questionsTab">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold">Bank Soal</h3>
+                            <button id="addQuestionBtn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Tambah Soal
+                            </button>
+                        </div>
+                        
+                        <div id="questionsList">
+                            <!-- Questions will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="reportsTab">
+                        <h3 class="text-lg font-bold mb-4">Laporan dan Statistik</h3>
+                        <div id="reportsContent">
+                            <!-- Reports will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <button id="adminLogoutBtn" class="btn btn-danger w-full mt-4">
+                        <i class="fas fa-sign-out-alt"></i> Keluar dari Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // Fungsi untuk menampilkan waktu sekarang
-        function updateClock() {
-            const clockElement = document.getElementById('clock');
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            clockElement.innerText = `Jam sekarang (${hours}:${minutes})`;
-        }
-
-        // Update setiap detik
-        setInterval(updateClock, 1000);
-        updateClock(); // Panggil sekali untuk inisialisasi waktu
-
-        const words = [
-            { word: 'Kapal', hint: 'Kendaraan melayang sejauh min 1 kaki' },
-            { word: 'mobil', hint: 'Kendaraan beroda empat' },
-            { word: '2030', hint: 'Roda tanpa ban dibuat masal pada tahun' },
-            { word: 'buku', hint: 'Sumber ilmu yang bisa dibaca' },
-            { word: 'sasando', hint: 'Alat musik yang diciptakan di Indonesia bagian timur' }, 
-            { word: 'Jerman', hint: 'Negara yang kalah pada perang dunia ke 2' },
-            { word: 'Bali', hint: 'Puputan margarana adalah perang habis habisan di' },
-            { word: 'Graham bell', hint: 'Perancang smartphone' },
-            { word: 'N65', hint: 'Node chipset tertua di dunia' },                                             
-            { word: 'Suriname', hint: 'Negara yang paling banyak orang jawanya selain Indonesia ' },
-            { word: 'smkn54', hint: 'Perancang web ini bangga kepada sekolah ' },
-            { word: 'olimpiad', hint: 'Olimipade siswa yang berpacu pada bidang matematika ataupun sains'},
-            { word: 'jonestown', hint: 'Peristiwa kelam amerika serikat selain peristiwa 9/11'},
-            { word: 'Kanjuruhan', hint: 'stadion tempat paling bersejarah di Indonesia'},
-            { word: 'vchambers', hint: 'Teknologi cooling paling kuat di smartphone kelas atas'},
-        ];
-
-        let currentWord = {};
-        let usedWords = [];
+        // Inisialisasi data
+        let currentUser = null;
+        let gameMode = null; // 'practice' or 'exam'
+        let currentQuestionIndex = 0;
         let score = 0;
-        let correctAnswers = 0;
-        let totalTests = 0;
-        let totalScore = 0;
+        let timerInterval = null;
+        let timeLeft = 600; // 10 minutes in seconds for exam mode
+        let questions = [];
+        let userAnswers = [];
+        let isAdmin = false;
+        let darkMode = false;
+        let musicPlaying = false;
 
-        function setNewWord() {
-            if (usedWords.length === words.length) {
-                usedWords = []; // Reset jika semua soal telah ditampilkan
-                updateAverageScore(); // Tampilkan rerata di akhir setiap set
-            }
-
-            do {
-                currentWord = words[Math.floor(Math.random() * words.length)];
-            } while (usedWords.includes(currentWord.word)); // Memastikan soal tidak diulang
-
-            usedWords.push(currentWord.word);
-            document.getElementById('hint').innerText = `Petunjuk: ${currentWord.hint}`;
-            document.getElementById('guessInput').value = '';
-            document.getElementById('result').classList.add('opacity-0');
-        }
-
-        function checkGuess() {
-            const userGuess = document.getElementById('guessInput').value.trim().toLowerCase();
-            const result = document.getElementById('result');
-            result.classList.remove('opacity-0');
-            
-            if (userGuess === currentWord.word.toLowerCase()) {
-                result.innerText = "Selamat! Tebakanmu benar 🔥";
-                result.style.color = "#10B981";
-                result.classList.add('animate-bounce');
-                correctAnswers++;
-                score = (correctAnswers / words.length) * 100;
-                document.getElementById('score').innerText = `Nilai: ${Math.round(score)}`;
-                setTimeout(() => {
-                    result.classList.remove('animate-bounce');
-                    setNewWord(); 
-                }, 2000); 
-            } else {
-                result.innerText = "Salah! Coba lagi kawanku 😅";
-                result.style.color = "#EF4444";
-                result.classList.add('animate-shake');
-                setTimeout(() => {
-                    result.classList.remove('animate-shake');
-                }, 1000);
-            }
-
-            // Setelah semua soal selesai, hitung rerata
-            if (usedWords.length === words.length) {
-                totalTests++;
-                totalScore += score;
-                updateAverageScore(); // Tampilkan rerata
-                // Reset skor dan jawaban benar untuk test baru
-                correctAnswers = 0;
-                score = 0;
-            }
-        }
-
-        function updateAverageScore() {
-            const averageScore = totalScore / totalTests;
-            document.getElementById('average').innerText = `Rerata: ${Math.round(averageScore)}`;
-        }
-
-        document.getElementById('guessInput').addEventListener('keyup', function (e) {
-            if (e.key === 'Enter') {
-                checkGuess();
-            }
-        });
-
-        // Fungsi untuk memutar dan menghentikan musik
-        function toggleAudio() {
-            const audio = document.getElementById('backsound');
-            const playButton = document.getElementById('playButton');
-            
-            if (audio.paused) {
-                audio.play();
-                playButton.innerText = "||"; // Ganti ikon menjadi pause
-            } else {
-                audio.pause();
-                playButton.innerText = ">"; // Kembali ke ikon play
-            }
-        }
-
-        // Atur soal pertama kali
-        setNewWord();
-    </script>
-</body>
-</html>
+        // Sample questions (will be loaded from localStorage)
+        const sampleQuestions = [
+            {
+                id: 1,
+                type: 'multiple_choice',
+                hint: 'Kendaraan beroda empat',
+                word: 'mobil',
+                options: ['Sepeda', 'Mobil', 'Motor', 'Becak'],
+                answer: 'Mobil'
+            },
+            {
+                id: 2,
+                type: 'multiple_choice',
+                hint: 'Sumber ilmu yang bisa dibaca',
+                word: 'buku',
+                options: ['Buku', 'Internet', 'Guru', 'Televisi'],
+                answer: 'B
