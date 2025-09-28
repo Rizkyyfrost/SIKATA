@@ -592,4 +592,860 @@
                 hint: 'Sumber ilmu yang bisa dibaca',
                 word: 'buku',
                 options: ['Buku', 'Internet', 'Guru', 'Televisi'],
-                answer: 'B
+                answer:  'Buku'
+            },
+            {
+                id: 3,
+                type: 'fill_in',
+                hint: 'Kendaraan melayang sejauh min 1 kaki',
+                word: 'Kapal',
+                answer: 'Kapal'
+            },
+            {
+                id: 4,
+                type: 'multiple_choice',
+                hint: 'Alat musik yang diciptakan di Indonesia bagian timur',
+                word: 'sasando',
+                options: ['Gitar', 'Sasando', 'Piano', 'Drum'],
+                answer: 'Sasando'
+            },
+            {
+                id: 5,
+                type: 'multiple_choice',
+                hint: 'Negara yang kalah pada perang dunia ke 2',
+                word: 'Jerman',
+                options: ['Jerman', 'Amerika', 'Inggris', 'Rusia'],
+                answer: 'Jerman'
+            }
+        ];
+
+        // Achievements
+        const achievements = [
+            { id: 'first_play', name: 'Pemula', description: 'Selesaikan permainan pertama', icon: 'fas fa-star', earned: false },
+            { id: 'perfect_score', name: 'Sempurna', description: 'Dapatkan nilai 100%', icon: 'fas fa-trophy', earned: false },
+            { id: 'fast_thinker', name: 'Cepat Tanggap', description: 'Jawab soal dalam waktu 5 detik', icon: 'fas fa-bolt', earned: false },
+            { id: 'streak_5', name: 'Konsisten', description: 'Jawab 5 soal berturut-turut dengan benar', icon: 'fas fa-fire', earned: false },
+            { id: 'exam_master', name: 'Master Ujian', description: 'Selesaikan mode ujian', icon: 'fas fa-graduation-cap', earned: false }
+        ];
+
+        // Initialize the game
+        function initGame() {
+            loadQuestions();
+            setupEventListeners();
+            checkAttendance();
+            updateLeaderboard();
+        }
+
+        // Load questions from localStorage or use sample questions
+        function loadQuestions() {
+            const savedQuestions = localStorage.getItem('gameQuestions');
+            if (savedQuestions) {
+                questions = JSON.parse(savedQuestions);
+            } else {
+                questions = sampleQuestions;
+                localStorage.setItem('gameQuestions', JSON.stringify(questions));
+            }
+        }
+
+        // Save questions to localStorage
+        function saveQuestions() {
+            localStorage.setItem('gameQuestions', JSON.stringify(questions));
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login buttons
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('guestLoginBtn').addEventListener('click', handleGuestLogin);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            
+            // Mode selection
+            document.getElementById('practiceModeBtn').addEventListener('click', () => selectMode('practice'));
+            document.getElementById('examModeBtn').addEventListener('click', () => selectMode('exam'));
+            
+            // Game buttons
+            document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
+            document.getElementById('submitTextAnswerBtn').addEventListener('click', checkTextAnswer);
+            
+            // Admin buttons
+            document.getElementById('adminToggle').addEventListener('click', toggleAdminModal);
+            document.getElementById('closeAdminModal').addEventListener('click', toggleAdminModal);
+            document.getElementById('adminLoginBtn').addEventListener('click', handleAdminLogin);
+            document.getElementById('adminLogoutBtn').addEventListener('click', handleAdminLogout);
+            document.getElementById('addQuestionBtn').addEventListener('click', showAddQuestionForm);
+            
+            // Theme and music toggles
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            document.getElementById('musicToggle').addEventListener('click', toggleMusic);
+            
+            // Tab switching in admin panel
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+            
+            // Enter key for text input
+            document.getElementById('textAnswerInput').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    checkTextAnswer();
+                }
+            });
+        }
+
+        // Handle user login
+        function handleLogin() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (username) {
+                currentUser = username;
+                saveUserData();
+                showGameScreen();
+            } else {
+                alert('Silakan masukkan nama pengguna!');
+            }
+        }
+
+        // Handle guest login
+        function handleGuestLogin() {
+            currentUser = 'Tamu_' + Math.floor(Math.random() * 1000);
+            saveUserData();
+            showGameScreen();
+        }
+
+        // Handle logout
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            resetGame();
+        }
+
+        // Show the game screen after login
+        function showGameScreen() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('currentUser').textContent = currentUser;
+            document.getElementById('userGreeting').textContent = `Halo, ${currentUser}!`;
+            
+            // Load user achievements
+            loadUserAchievements();
+        }
+
+        // Select game mode
+        function selectMode(mode) {
+            gameMode = mode;
+            document.getElementById('gameArea').classList.remove('hidden');
+            document.getElementById('timerContainer').classList.toggle('hidden', mode !== 'exam');
+            
+            if (mode === 'exam') {
+                startExamTimer();
+            }
+            
+            startGame();
+        }
+
+        // Start the game
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            showQuestion();
+        }
+
+        // Show the current question
+        function showQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById('questionHint').textContent = question.hint;
+            document.getElementById('progressText').textContent = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
+            document.getElementById('progressFill').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+            document.getElementById('scoreDisplay').textContent = `Skor: ${score}`;
+            
+            // Hide feedback and show question
+            document.getElementById('feedbackContainer').classList.add('hidden');
+            
+            if (question.type === 'multiple_choice') {
+                document.getElementById('optionsContainer').classList.remove('hidden');
+                document.getElementById('textInputContainer').classList.add('hidden');
+                
+                // Populate options
+                const optionsContainer = document.getElementById('optionsContainer');
+                optionsContainer.innerHTML = '';
+                
+                question.options.forEach(option => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'question-option';
+                    optionElement.textContent = option;
+                    optionElement.addEventListener('click', () => selectOption(optionElement, option));
+                    optionsContainer.appendChild(optionElement);
+                });
+            } else {
+                document.getElementById('optionsContainer').classList.add('hidden');
+                document.getElementById('textInputContainer').classList.remove('hidden');
+                document.getElementById('textAnswerInput').value = '';
+                document.getElementById('textAnswerInput').focus();
+            }
+        }
+
+        // Select an option in multiple choice questions
+        function selectOption(optionElement, option) {
+            // Deselect all options
+            document.querySelectorAll('.question-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Select the clicked option
+            optionElement.classList.add('selected');
+            
+            // Check answer after a short delay
+            setTimeout(() => {
+                checkAnswer(option);
+            }, 500);
+        }
+
+        // Check answer for multiple choice questions
+        function checkAnswer(selectedOption) {
+            const question = questions[currentQuestionIndex];
+            const isCorrect = selectedOption === question.answer;
+            
+            // Show feedback
+            showFeedback(isCorrect, question.answer);
+            
+            // Record answer
+            userAnswers.push({
+                questionId: question.id,
+                userAnswer: selectedOption,
+                correctAnswer: question.answer,
+                isCorrect: isCorrect
+            });
+            
+            // Update score
+            if (isCorrect) {
+                score += 10;
+                checkAchievements();
+            }
+        }
+
+        // Check answer for fill-in questions
+        function checkTextAnswer() {
+            const userAnswer = document.getElementById('textAnswerInput').value.trim();
+            if (!userAnswer) {
+                alert('Silakan masukkan jawaban!');
+                return;
+            }
+            
+            const question = questions[currentQuestionIndex];
+            const isCorrect = userAnswer.toLowerCase() === question.answer.toLowerCase();
+            
+            // Show feedback
+            showFeedback(isCorrect, question.answer);
+            
+            // Record answer
+            userAnswers.push({
+                questionId: question.id,
+                userAnswer: userAnswer,
+                correctAnswer: question.answer,
+                isCorrect: isCorrect
+            });
+            
+            // Update score
+            if (isCorrect) {
+                score += 10;
+                checkAchievements();
+            }
+        }
+
+        // Show feedback after answering
+        function showFeedback(isCorrect, correctAnswer) {
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const feedbackText = document.getElementById('feedbackText');
+            
+            feedbackContainer.classList.remove('hidden');
+            
+            if (isCorrect) {
+                feedbackText.textContent = 'Benar! Jawaban Anda tepat.';
+                feedbackText.className = 'text-lg font-semibold text-green-600';
+            } else {
+                feedbackText.textContent = `Salah! Jawaban yang benar adalah: ${correctAnswer}`;
+                feedbackText.className = 'text-lg font-semibold text-red-600';
+            }
+            
+            // Highlight correct/incorrect options for multiple choice
+            if (questions[currentQuestionIndex].type === 'multiple_choice') {
+                document.querySelectorAll('.question-option').forEach(option => {
+                    if (option.textContent === correctAnswer) {
+                        option.classList.add('correct');
+                    } else if (option.classList.contains('selected') && option.textContent !== correctAnswer) {
+                        option.classList.add('incorrect');
+                    }
+                });
+            }
+        }
+
+        // Move to the next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                finishGame();
+            }
+        }
+
+        // Finish the game and show results
+        function finishGame() {
+            // Calculate final score
+            const finalScore = (score / (questions.length * 10)) * 100;
+            
+            // Save user results
+            saveUserResults(finalScore);
+            
+            // Show results
+            alert(`Permainan selesai! Skor Anda: ${finalScore.toFixed(1)}%`);
+            
+            // Update leaderboard
+            updateLeaderboard();
+            
+            // Show leaderboard
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('leaderboardContainer').classList.remove('hidden');
+            
+            // Stop exam timer if running
+            if (gameMode === 'exam') {
+                clearInterval(timerInterval);
+            }
+            
+            // Check for achievements
+            checkAchievements();
+        }
+
+        // Start exam timer
+        function startExamTimer() {
+            timeLeft = 600; // 10 minutes
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    finishGame();
+                }
+            }, 1000);
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color when time is running out
+            if (timeLeft <= 60) {
+                document.getElementById('timer').classList.add('text-red-600');
+            }
+        }
+
+        // Check and update achievements
+        function checkAchievements() {
+            const userData = getUserData();
+            if (!userData.achievements) userData.achievements = {};
+            
+            // Check for first play achievement
+            if (userData.gamesPlayed === 1 && !userData.achievements.first_play) {
+                userData.achievements.first_play = true;
+                showAchievementNotification('first_play');
+            }
+            
+            // Check for perfect score achievement
+            if (score === questions.length * 10 && !userData.achievements.perfect_score) {
+                userData.achievements.perfect_score = true;
+                showAchievementNotification('perfect_score');
+            }
+            
+            // Check for exam master achievement
+            if (gameMode === 'exam' && !userData.achievements.exam_master) {
+                userData.achievements.exam_master = true;
+                showAchievementNotification('exam_master');
+            }
+            
+            saveUserData();
+            loadUserAchievements();
+        }
+
+        // Show achievement notification
+        function showAchievementNotification(achievementId) {
+            const achievement = achievements.find(a => a.id === achievementId);
+            if (achievement) {
+                // Create notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-lg z-50 fade-in';
+                notification.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="${achievement.icon} text-xl mr-2"></i>
+                        <div>
+                            <p class="font-bold">Pencapaian Baru!</p>
+                            <p>${achievement.name}: ${achievement.description}</p>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Remove notification after 5 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
+            }
+        }
+
+        // Load user achievements
+        function loadUserAchievements() {
+            const userData = getUserData();
+            const achievementsContainer = document.getElementById('achievementsContainer');
+            achievementsContainer.innerHTML = '';
+            
+            achievements.forEach(achievement => {
+                const earned = userData.achievements && userData.achievements[achievement.id];
+                
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement-badge ${earned ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-200 text-gray-500'}`;
+                achievementElement.innerHTML = `
+                    <i class="${achievement.icon}"></i>
+                    <span>${achievement.name}</span>
+                `;
+                
+                if (earned) {
+                    achievementElement.classList.add('pulse');
+                }
+                
+                achievementsContainer.appendChild(achievementElement);
+            });
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '';
+            
+            // Get all users
+            const users = getAllUsers();
+            
+            // Sort by highest score
+            users.sort((a, b) => (b.highScore || 0) - (a.highScore || 0));
+            
+            // Display top 10
+            users.slice(0, 10).forEach((user, index) => {
+                const leaderboardItem = document.createElement('div');
+                leaderboardItem.className = 'leaderboard-item';
+                
+                leaderboardItem.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="font-bold mr-2">${index + 1}.</span>
+                        <span>${user.username}</span>
+                        ${user.username.startsWith('Tamu_') ? '<span class="badge badge-warning ml-2">Tamu</span>' : ''}
+                    </div>
+                    <span class="font-bold">${user.highScore || 0}%</span>
+                `;
+                
+                leaderboardList.appendChild(leaderboardItem);
+            });
+        }
+
+        // Toggle admin modal
+        function toggleAdminModal() {
+            const modal = document.getElementById('adminModal');
+            if (modal.style.display === 'flex') {
+                modal.style.display = 'none';
+            } else {
+                modal.style.display = 'flex';
+                
+                // If not logged in as admin, show login form
+                if (!isAdmin) {
+                    document.getElementById('adminLoginForm').classList.remove('hidden');
+                    document.getElementById('adminPanel').classList.add('hidden');
+                } else {
+                    document.getElementById('adminLoginForm').classList.add('hidden');
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    loadAdminDashboard();
+                }
+            }
+        }
+
+        // Handle admin login
+        function handleAdminLogin() {
+            const adminCode = document.getElementById('adminCodeInput').value;
+            if (adminCode === 'Adm1nN8') {
+                isAdmin = true;
+                document.getElementById('adminLoginForm').classList.add('hidden');
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadAdminDashboard();
+            } else {
+                alert('Kode admin salah!');
+            }
+        }
+
+        // Handle admin logout
+        function handleAdminLogout() {
+            isAdmin = false;
+            toggleAdminModal();
+        }
+
+        // Load admin dashboard
+        function loadAdminDashboard() {
+            // Load statistics
+            const users = getAllUsers();
+            document.getElementById('totalPlayers').textContent = users.length;
+            
+            const totalScore = users.reduce((sum, user) => sum + (user.highScore || 0), 0);
+            const averageScore = users.length > 0 ? (totalScore / users.length).toFixed(1) : 0;
+            document.getElementById('averageScore').textContent = `${averageScore}%`;
+            
+            // Load recent players
+            const recentPlayers = document.getElementById('recentPlayers');
+            recentPlayers.innerHTML = '';
+            
+            users.slice(0, 5).forEach(user => {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'flex justify-between items-center p-2 border-b border-gray-200 dark:border-gray-600';
+                playerElement.innerHTML = `
+                    <span>${user.username}</span>
+                    <span class="font-bold">${user.highScore || 0}%</span>
+                `;
+                recentPlayers.appendChild(playerElement);
+            });
+            
+            // Load questions
+            loadQuestionsList();
+        }
+
+        // Load questions list in admin panel
+        function loadQuestionsList() {
+            const questionsList = document.getElementById('questionsList');
+            questionsList.innerHTML = '';
+            
+            questions.forEach((question, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'card mb-3';
+                questionElement.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold">Soal ${index + 1}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">${question.hint}</p>
+                            <p class="text-sm"><strong>Jawaban:</strong> ${question.answer}</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${question.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                questionsList.appendChild(questionElement);
+            });
+        }
+
+        // Show add question form
+        function showAddQuestionForm() {
+            const formHtml = `
+                <div class="card mb-4">
+                    <h4 class="font-bold mb-3">Tambah Soal Baru</h4>
+                    <div class="mb-3">
+                        <label class="block mb-1">Tipe Soal</label>
+                        <select id="newQuestionType" class="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="multiple_choice">Pilihan Ganda</option>
+                            <option value="fill_in">Isian</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block mb-1">Petunjuk</label>
+                        <input type="text" id="newQuestionHint" class="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block mb-1">Jawaban</label>
+                        <input type="text" id="newQuestionAnswer" class="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div id="multipleChoiceOptions" class="mb-3">
+                        <label class="block mb-1">Pilihan Jawaban (pisahkan dengan koma)</label>
+                        <input type="text" id="newQuestionOptions" class="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Opsi 1, Opsi 2, Opsi 3, Opsi 4">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="saveQuestionBtn" class="btn btn-primary flex-1">Simpan</button>
+                        <button id="cancelQuestionBtn" class="btn btn-secondary flex-1">Batal</button>
+                    </div>
+                </div>
+            `;
+            
+            const questionsList = document.getElementById('questionsList');
+            questionsList.insertAdjacentHTML('afterbegin', formHtml);
+            
+            // Add event listeners
+            document.getElementById('newQuestionType').addEventListener('change', function() {
+                document.getElementById('multipleChoiceOptions').style.display = 
+                    this.value === 'multiple_choice' ? 'block' : 'none';
+            });
+            
+            document.getElementById('saveQuestionBtn').addEventListener('click', saveNewQuestion);
+            document.getElementById('cancelQuestionBtn').addEventListener('click', loadQuestionsList);
+        }
+
+        // Save new question
+        function saveNewQuestion() {
+            const type = document.getElementById('newQuestionType').value;
+            const hint = document.getElementById('newQuestionHint').value;
+            const answer = document.getElementById('newQuestionAnswer').value;
+            
+            if (!hint || !answer) {
+                alert('Silakan isi semua field yang diperlukan!');
+                return;
+            }
+            
+            const newQuestion = {
+                id: questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1,
+                type: type,
+                hint: hint,
+                word: answer,
+                answer: answer
+            };
+            
+            if (type === 'multiple_choice') {
+                const optionsInput = document.getElementById('newQuestionOptions').value;
+                if (!optionsInput) {
+                    alert('Silakan masukkan pilihan jawaban!');
+                    return;
+                }
+                
+                const options = optionsInput.split(',').map(opt => opt.trim());
+                if (!options.includes(answer)) {
+                    alert('Jawaban yang benar harus termasuk dalam pilihan jawaban!');
+                    return;
+                }
+                
+                newQuestion.options = options;
+            }
+            
+            questions.push(newQuestion);
+            saveQuestions();
+            loadQuestionsList();
+            alert('Soal berhasil ditambahkan!');
+        }
+
+        // Delete question
+        function deleteQuestion(questionId) {
+            if (confirm('Apakah Anda yakin ingin menghapus soal ini?')) {
+                questions = questions.filter(q => q.id !== questionId);
+                saveQuestions();
+                loadQuestionsList();
+            }
+        }
+
+        // Switch tabs in admin panel
+        function switchTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            
+            // Show active tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabName}Tab`);
+            });
+            
+            // Load content if needed
+            if (tabName === 'reports') {
+                loadReports();
+            }
+        }
+
+        // Load reports
+        function loadReports() {
+            const users = getAllUsers();
+            const reportsContent = document.getElementById('reportsContent');
+            
+            let html = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="card text-center">
+                        <p class="text-2xl font-bold">${users.length}</p>
+                        <p>Total Pemain</p>
+                    </div>
+                    <div class="card text-center">
+                        <p class="text-2xl font-bold">${questions.length}</p>
+                        <p>Total Soal</p>
+                    </div>
+                </div>
+                
+                <h4 class="font-bold mb-2">Distribusi Skor</h4>
+                <div class="mb-6">
+            `;
+            
+            // Score distribution
+            const scoreRanges = [
+                { range: '90-100', min: 90, max: 100, count: 0 },
+                { range: '80-89', min: 80, max: 89, count: 0 },
+                { range: '70-79', min: 70, max: 79, count: 0 },
+                { range: '60-69', min: 60, max: 69, count: 0 },
+                { range: '0-59', min: 0, max: 59, count: 0 }
+            ];
+            
+            users.forEach(user => {
+                const score = user.highScore || 0;
+                for (const range of scoreRanges) {
+                    if (score >= range.min && score <= range.max) {
+                        range.count++;
+                        break;
+                    }
+                }
+            });
+            
+            scoreRanges.forEach(range => {
+                const percentage = users.length > 0 ? (range.count / users.length) * 100 : 0;
+                html += `
+                    <div class="flex justify-between items-center mb-1">
+                        <span>${range.range}%</span>
+                        <span>${range.count} pemain</span>
+                    </div>
+                    <div class="progress-bar mb-2">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            reportsContent.innerHTML = html;
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            darkMode = !darkMode;
+            document.body.classList.toggle('dark-mode', darkMode);
+            document.getElementById('themeToggle').innerHTML = darkMode ? 
+                '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        // Toggle music
+        function toggleMusic() {
+            const music = document.getElementById('backgroundMusic');
+            
+            if (musicPlaying) {
+                music.pause();
+                document.getElementById('musicToggle').innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else {
+                music.play();
+                document.getElementById('musicToggle').innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+            
+            musicPlaying = !musicPlaying;
+        }
+
+        // Check attendance
+        function checkAttendance() {
+            const today = new Date().toDateString();
+            const lastAttendance = localStorage.getItem('lastAttendance');
+            const attendanceStatus = document.getElementById('attendanceStatus');
+            const attendanceText = document.getElementById('attendanceText');
+            
+            if (lastAttendance === today) {
+                attendanceStatus.className = 'badge badge-success';
+                attendanceText.textContent = 'Sudah Absen';
+            } else {
+                attendanceStatus.className = 'badge badge-warning';
+                attendanceText.textContent = 'Belum Absen';
+                
+                // Auto-attendance after 5 seconds
+                setTimeout(() => {
+                    localStorage.setItem('lastAttendance', today);
+                    checkAttendance();
+                }, 5000);
+            }
+        }
+
+        // Reset game state
+        function resetGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('leaderboardContainer').classList.add('hidden');
+        }
+
+        // User data management
+        function getUserData() {
+            if (!currentUser) return {};
+            
+            const userData = localStorage.getItem(`user_${currentUser}`);
+            return userData ? JSON.parse(userData) : {
+                username: currentUser,
+                highScore: 0,
+                gamesPlayed: 0,
+                achievements: {}
+            };
+        }
+
+        function saveUserData() {
+            if (!currentUser) return;
+            
+            const userData = getUserData();
+            localStorage.setItem(`user_${currentUser}`, JSON.stringify(userData));
+        }
+
+        function saveUserResults(finalScore) {
+            const userData = getUserData();
+            userData.gamesPlayed = (userData.gamesPlayed || 0) + 1;
+            
+            if (finalScore > (userData.highScore || 0)) {
+                userData.highScore = finalScore;
+            }
+            
+            // Save game history
+            if (!userData.gameHistory) userData.gameHistory = [];
+            userData.gameHistory.push({
+                date: new Date().toISOString(),
+                score: finalScore,
+                mode: gameMode,
+                questions: questions.length
+            });
+            
+            saveUserData();
+        }
+
+        function getAllUsers() {
+            const users = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('user_')) {
+                    const userData = JSON.parse(localStorage.getItem(key));
+                    users.push(userData);
+                }
+            }
+            
+            return users;
+        }
+
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for saved theme preference
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                darkMode = true;
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            initGame();
+        });
+
+        // Make functions available globally for onclick attributes
+        window.deleteQuestion = deleteQuestion;
+    </script>
+</body>
+</html>
